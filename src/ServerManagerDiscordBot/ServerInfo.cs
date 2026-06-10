@@ -9,7 +9,7 @@ public class ServerInfo
 
     public string? Icon { get; set; }
 
-    public List<string?>? WipePath { get; set; }
+    public List<string?>? WipePaths { get; set; }
 
     public string? Readme { get; set; }
 
