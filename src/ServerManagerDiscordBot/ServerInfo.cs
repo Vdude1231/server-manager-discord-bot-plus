@@ -6,11 +6,13 @@ public class ServerInfo
     public Dictionary<string, string?>? HostProperties { get; set; }
 
     public string? Game { get; set; }
-    
+
     public string? Icon { get; set; }
 
+    public List<string?>? WipePath { get; set; }
+
     public string? Readme { get; set; }
-    
+
     public string? FilesPath { get; set; }
 
     public string? GalleryPath { get; set; }

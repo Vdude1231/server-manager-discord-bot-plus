@@ -27,6 +27,22 @@ public class ServersCommandModule(
         builder.WithGroupName(AppSettings.SlashCommandPrefix);
     }
 
+    [SlashCommand("wipe", "Wipe a server.")]
+    public async Task Wipe([Autocomplete(typeof(ServersAutocompleteHandler))] string name)
+    {
+        await DeferAsync(ephemeral: true);
+
+        try
+        {
+
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing wipe command.");
+            await FollowupAsync($"Interaction failed. See logs for details.", ephemeral: true);
+        }
+    }
+
     [SlashCommand("list", "List all servers.")]
     public async Task List()
     {
@@ -96,7 +112,7 @@ public class ServersCommandModule(
         try
         {
             var info = await ServerManager.GetServerInfoAsync(name);
-            
+
             ServerStatus? status = null;
             if (!string.IsNullOrWhiteSpace(info.HostAdapterName))
             {
@@ -447,9 +463,9 @@ public class ServersCommandModule(
 
             var totalCount = files.Length;
             const int maxCount = 10; // Discord max
-            const int maxSize =  25 * 1024 * 1024; // Discord max
-            
-            long fileSetSize = 0; 
+            const int maxSize = 25 * 1024 * 1024; // Discord max
+
+            long fileSetSize = 0;
             var fileSet = files
                 .OrderByDescending(f => f.Name)
                 .Skip(startIndex - 1)
