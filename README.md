@@ -1,5 +1,7 @@
 # Server Manager Discord Bot
 
+A Personal fork of John's bot, with added features and customizations specific to our needs. Please support the original project at [server-manager-discord-bot](https://github.com/cruikshj/server-manager-discord-bot).
+
 This repository represents a Discord Bot application for managing dedicated game servers.  It is intended to be self-hosted, and configured to need.  There is no SaaS instance available.
 
 ## Features
