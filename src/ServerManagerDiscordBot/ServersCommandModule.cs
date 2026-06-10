@@ -34,11 +34,29 @@ public class ServersCommandModule(
 
         try
         {
+            var info = await ServerManager.GetServerInfoAsync(name);
 
+            if (info.WipePaths == null || info.WipePaths.Count == 0)
+            {
+                await FollowupAsync($"No wipe paths configured for `{name}`.", ephemeral: true);
+                return;
+            }
+
+            var pathList = string.Join("\n", info.WipePaths.Select(p => $"- `{p}`"));
+
+            var component = new ComponentBuilder()
+                .WithButton("Confirm Wipe", $"wipe-confirm|{name}", ButtonStyle.Danger)
+                .WithButton("Cancel", $"wipe-cancel|{name}", ButtonStyle.Secondary)
+                .Build();
+
+            await FollowupAsync(
+                $"⚠️ **Wipe `{name}`?**\nThis will delete the following paths:\n{pathList}",
+                components: component,
+                ephemeral: true);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error processing wipe command.");
+            Logger.LogError(ex, "Error processing wipe command for server '{Name}'.", name);
             await FollowupAsync($"Interaction failed. See logs for details.", ephemeral: true);
         }
     }
@@ -283,6 +301,74 @@ public class ServersCommandModule(
             Logger.LogError(ex, "Error stopping server '{Name}'.", name);
             await FollowupAsync($"Interaction failed. See logs for details.", ephemeral: true);
         }
+    }
+
+    [ComponentInteraction("wipe-confirm|*", true)]
+    public async Task WipeConfirm(string name)
+    {
+        await DeferAsync(ephemeral: true);
+
+        try
+        {
+            var info = await ServerManager.GetServerInfoAsync(name);
+
+            if (info.WipePaths == null || info.WipePaths.Count == 0)
+            {
+                await FollowupAsync($"No wipe paths configured for `{name}`.", ephemeral: true);
+                return;
+            }
+
+            var errors = new List<string>();
+
+            foreach (var path in info.WipePaths)
+            {
+                if (string.IsNullOrWhiteSpace(path)) continue;
+
+                try
+                {
+                    if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, recursive: true);
+                        Directory.CreateDirectory(path); // leave folder intact, contents gone
+                    }
+                    else if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                    else
+                    {
+                        errors.Add($"`{path}` not found");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error wiping path '{Path}' for server '{Name}'.", path, name);
+                    errors.Add($"`{path}` failed: {ex.Message}");
+                }
+            }
+
+            if (errors.Count > 0)
+            {
+                var errorList = string.Join("\n", errors);
+                await FollowupAsync($"Wipe of `{name}` completed with errors:\n{errorList}", ephemeral: true);
+            }
+            else
+            {
+                await FollowupAsync($"{Context.User.GlobalName} wiped the `{name}` server.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error processing wipe confirmation for server '{Name}'.", name);
+            await FollowupAsync($"Interaction failed. See logs for details.", ephemeral: true);
+        }
+    }
+
+    [ComponentInteraction("wipe-cancel|*", true)]
+    public async Task WipeCancel(string name)
+    {
+        await DeferAsync(ephemeral: true);
+        await FollowupAsync($"Wipe of `{name}` cancelled.", ephemeral: true);
     }
 
     [ComponentInteraction("logs|*", true)]
